@@ -13,29 +13,48 @@ import uuid
 
 class DeviceConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
-        try:
-            query_string = self.scope["query_string"]
-            query_params = query_string.decode()
-            query_dict = parse_qs(query_params)
-            UUID = uuid.UUID(query_dict['UUID'][0]).hex
-            device: Device = await getDataBaseDeviceObject(UUID)
-            if device.Password == query_dict['password'][0] and str(device.pk) == query_dict['UUID'][0]:
-                # await self.channel_layer.group_add(
-                #     'Device',
-                #     self.channel_name,
-                # )
-                # global devices
-                # devices[UUID] = self
-                # await self.accept()
+        # await self.accept()
+        query_string = self.scope["query_string"]
+        query_params = query_string.decode()
+        query_dict = parse_qs(query_params)
+        UUID = uuid.UUID(query_dict['UUID'][0]).hex
+        device: Device = await getDataBaseDeviceObject(UUID)
+        logging.info("qqweerr")
+        logging.info(query_dict['UUID'][0])
+        if device.Password == query_dict['password'][0] and str(device.pk) == query_dict['UUID'][0]:
+            await self.channel_layer.group_add(
+                'Device',
+                self.channel_name,
+            )
+            await self.accept()
 
-                await self.send("Подключение прошло успешно")
-                logging.info(f"Устройство {device.id} c адреса {self.scope['client']} подключено ")
-            else:
-                await self.close()
-                logging.info(f"Устройство {device.id} c адреса {self.scope['client']} не смогло подключиться ")
-            # global clients
-        except:
-            logging.error(f"Устройство {self.scope['client']} не смогло подключиться")
+            await self.send("Подключение прошло успешно")
+            logging.info(f"Устройство {device.id} c адреса {self.scope['client']} подключено ")
+        # try:
+        #     query_string = self.scope["query_string"]
+        #     query_params = query_string.decode()
+        #     query_dict = parse_qs(query_params)
+        #     UUID = uuid.UUID(query_dict['UUID'][0]).hex
+        #     device: Device = await getDataBaseDeviceObject(UUID)
+        #     logging.info("qqweerr")
+        #     logging.info(query_dict['UUID'][0])
+        #     if device.Password == query_dict['password'][0] and str(device.pk) == query_dict['UUID'][0]:
+        #         await self.channel_layer.group_add(
+        #             'Device',
+        #             self.channel_name,
+        #         )
+        #         global devices
+        #         devices[UUID] = self
+        #         await self.accept()
+        #
+        #         await self.send("Подключение прошло успешно")
+        #         logging.info(f"Устройство {device.id} c адреса {self.scope['client']} подключено ")
+        #     else:
+        #         await self.close()
+        #         logging.info(f"Устройство {device.id} c адреса {self.scope['client']} не смогло подключиться ")
+        #     global clients
+        # except:
+        #     logging.error(f"Устройство {self.scope['client']} не смогло подключиться")
 
     async def disconnect(self, code):
         await self.send("Устройство отключено")
